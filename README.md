@@ -1,2 +1,2 @@
 # UE4BuildingScape
-A Building Scape game (C++ and Unreal Engine 4)
+A Building Escape game (C++ and Unreal Engine 4)
