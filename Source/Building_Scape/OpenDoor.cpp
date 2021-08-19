@@ -33,7 +33,6 @@ void UOpenDoor::BeginPlay()
 	}
 }
 
-
 // Called every frame
 void UOpenDoor::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
@@ -41,27 +40,26 @@ void UOpenDoor::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 
 	if (PressurePlate && PressurePlate->IsOverlappingActor(TargetActor))
 	{
+		UpdateDoor(DeltaTime, TargetYawToOpen, DoorOpenSpeed);
 
-		OpenDoor(DeltaTime, TargetYawToOpen);
+		DoorLastOpened = GetWorld()->GetTimeSeconds();
 	}
 	else
 	{
-		CloseDoor(DeltaTime);
+		if (GetWorld()->GetTimeSeconds() - DoorLastOpened >= DoorCloseDelay)
+		{
+			UpdateDoor(DeltaTime, InitialYaw, DoorCloseSpeed);
+		}
 	}
-}
-
-void UOpenDoor::OpenDoor(const float& DeltaTime, const float& TargetYaw)
-{
-	Rotator.Yaw = FMath::FInterpTo(GetCurrentYaw(), TargetYaw, DeltaTime, 2.f);
-	GetOwner()->SetActorRotation(Rotator);
-}
-
-void UOpenDoor::CloseDoor(const float& DeltaTime)
-{
-	OpenDoor(DeltaTime, InitialYaw);
 }
 
 float UOpenDoor::GetCurrentYaw() const
 {
 	return GetOwner()->GetActorRotation().Yaw;
+}
+
+void UOpenDoor::UpdateDoor(const float& DeltaTime, const float& TargetYaw, const float& Speed)
+{
+	Rotator.Yaw = FMath::FInterpTo(GetCurrentYaw(), TargetYaw, DeltaTime, Speed);
+	GetOwner()->SetActorRotation(Rotator);
 }
