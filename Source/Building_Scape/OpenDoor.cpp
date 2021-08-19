@@ -3,6 +3,7 @@
 
 #include "OpenDoor.h"
 #include "GameFramework/Actor.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values for this component's properties
 UOpenDoor::UOpenDoor()
@@ -19,7 +20,17 @@ void UOpenDoor::BeginPlay()
 	Super::BeginPlay();
 
 	InitialYaw = GetOwner()->GetActorRotation().Yaw;
-	TargetYaw += InitialYaw;
+
+	TargetYawToOpen += InitialYaw;
+
+	Rotator = GetOwner()->GetActorRotation();
+
+	TargetActor = UGameplayStatics::GetPlayerController(GetWorld(), 0)->GetPawn();
+
+	if (!PressurePlate)
+	{
+		UE_LOG(LogTemp, Error, TEXT("The Actor: %s has no PressurePlate setted"), *GetOwner()->GetName());
+	}
 }
 
 
@@ -28,8 +39,29 @@ void UOpenDoor::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	Rotator = GetOwner()->GetActorRotation();
-	CurrentYaw = GetOwner()->GetActorRotation().Yaw;
-	Rotator.Yaw = FMath::FInterpTo(CurrentYaw, TargetYaw, DeltaTime, 2.f);
+	if (PressurePlate && PressurePlate->IsOverlappingActor(TargetActor))
+	{
+
+		OpenDoor(DeltaTime, TargetYawToOpen);
+	}
+	else
+	{
+		CloseDoor(DeltaTime);
+	}
+}
+
+void UOpenDoor::OpenDoor(const float& DeltaTime, const float& TargetYaw)
+{
+	Rotator.Yaw = FMath::FInterpTo(GetCurrentYaw(), TargetYaw, DeltaTime, 2.f);
 	GetOwner()->SetActorRotation(Rotator);
+}
+
+void UOpenDoor::CloseDoor(const float& DeltaTime)
+{
+	OpenDoor(DeltaTime, InitialYaw);
+}
+
+float UOpenDoor::GetCurrentYaw() const
+{
+	return GetOwner()->GetActorRotation().Yaw;
 }
