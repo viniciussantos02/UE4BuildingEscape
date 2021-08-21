@@ -46,7 +46,7 @@ void UOpenDoor::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 	}
 	else
 	{
-		if (GetWorld()->GetTimeSeconds() - DoorLastOpened >= DoorCloseDelay)
+		if ((GetWorld()->GetTimeSeconds() - DoorLastOpened) >= DoorCloseDelay)
 		{
 			UpdateDoor(DeltaTime, InitialYaw, DoorCloseSpeed);
 		}
