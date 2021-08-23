@@ -1,5 +1,6 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
+#include "Components/StaticMeshComponent.h"
 #include "DrawDebugHelpers.h"
 #include "Grabber.h"
 #include "Kismet/GameplayStatics.h"
@@ -31,43 +32,49 @@ void UGrabber::BeginPlay()
 // Called every frame
 void UGrabber::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
-	GetLineTraceEnd();
-
-	if (PhysicsHandle->GetGrabbedComponent())
+	if (PhysicsHandle)
 	{
-		PhysicsHandle->SetTargetLocation(LineTraceEnd);
+		if (PhysicsHandle->GetGrabbedComponent())
+		{
+			PhysicsHandle->SetTargetLocation(GetLineTraceEnd());
+		}
 	}
 }
 
 void UGrabber::GrabPressed()
 {
-	UE_LOG(LogTemp, Warning, TEXT("PRESSED"));
-	
 	Hit = GetFirstPhysicsBodyInReach();
 
 	UPrimitiveComponent* TargetComponentToGrab = Hit.GetComponent();
 
-	if (Hit.GetActor())
+	AActor* ActorHit = Hit.GetActor();
+
+	if (ActorHit)
 	{
-		PhysicsHandle->GrabComponentAtLocation(
-			TargetComponentToGrab,
-			NAME_None,
-			LineTraceEnd
-		);
+		if (PhysicsHandle)
+		{
+			PhysicsHandle->GrabComponentAtLocation(
+				TargetComponentToGrab,
+				NAME_None,
+				GetLineTraceEnd()
+			);
+		}
 	}
 }
 
 void UGrabber::GrabReleased()
 {
-	UE_LOG(LogTemp, Warning, TEXT("RELESSED"))
-	PhysicsHandle->ReleaseComponent();
+	if (PhysicsHandle)
+	{
+		PhysicsHandle->ReleaseComponent();
+	}
 }
 
 void UGrabber::CheckPhysicsHandle()
 {
 	PhysicsHandle = GetOwner()->FindComponentByClass<UPhysicsHandleComponent>();
 
-	if (PhysicsHandle)
+	if (!PhysicsHandle)
 	{
 		UE_LOG(LogTemp, Error, TEXT("No PhysicsHandleComponent was found in the %s"), *GetOwner()->GetName());
 	}
@@ -90,32 +97,28 @@ void UGrabber::SetupInputBinds()
 
 FHitResult UGrabber::GetFirstPhysicsBodyInReach()
 {
-	GetLineTraceEnd();
-
 	FCollisionQueryParams TraceParams(FName(TEXT("")), false, GetOwner());
 
 	FHitResult HitResul;
 
 	GetWorld()->LineTraceSingleByObjectType(
 		OUT HitResul,
-		PlayerViewPointLocation,
-		LineTraceEnd,
+		PlayerController->GetPawn()->GetActorLocation(),
+		GetLineTraceEnd(),
 		FCollisionObjectQueryParams(ECollisionChannel::ECC_PhysicsBody),
 		TraceParams
 	);
 
-	if (Hit.GetActor())
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Actor hitted: %s"), *Hit.GetActor()->GetName())
-	}
-
 	return HitResul;
 }
 
-void UGrabber::GetLineTraceEnd()
+FVector UGrabber::GetLineTraceEnd() const
 {
+	FVector PlayerViewPointLocation;
+	FRotator PlayerViewPointRotation;
+
 	PlayerController->GetPlayerViewPoint(OUT PlayerViewPointLocation, OUT PlayerViewPointRotation);
 
-	LineTraceEnd = PlayerViewPointLocation + PlayerViewPointRotation.Vector() * ReachArm;
+	return PlayerViewPointLocation + PlayerViewPointRotation.Vector() * ReachArm;
 }
 

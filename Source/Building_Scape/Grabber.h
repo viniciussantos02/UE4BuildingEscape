@@ -22,15 +22,15 @@ protected:
 	virtual void BeginPlay() override;
 
 private:
-	APlayerController* PlayerController;
-	FVector PlayerViewPointLocation;
-	FRotator PlayerViewPointRotation;
-	FVector LineTraceEnd;
+	float ReachArm = 100.f;	
+
+	APlayerController* PlayerController;	
 	FHitResult Hit;
 
-	float ReachArm = 200.f;
-
+	UPROPERTY()
 	UPhysicsHandleComponent* PhysicsHandle = nullptr;
+
+	UPROPERTY()
 	UInputComponent* InputComponent = nullptr;
 
 	void GrabPressed();
@@ -38,5 +38,5 @@ private:
 	void CheckPhysicsHandle();
 	void SetupInputBinds();
 	FHitResult GetFirstPhysicsBodyInReach();
-	void GetLineTraceEnd();
+	FVector GetLineTraceEnd() const;	
 };
